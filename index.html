@@ -29,9 +29,32 @@
 
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
-  <script src="app.compiled.js"></script>
   <script>
-    ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+    (function () {
+      var names = ["app.compiled.js", "app_compiled.js"];
+      var i = 0;
+      function fail(msg) {
+        document.getElementById("loading").innerHTML =
+          '<div style="padding:24px;text-align:center;line-height:1.5"><div style="color:#ef4444;margin-bottom:12px">EROARE</div>' +
+          '<div style="font-size:16px;font-weight:400;color:#cbd5e1">' + msg + '</div></div>';
+      }
+      function tryLoad() {
+        if (i >= names.length) { fail("Nu gasesc fisierul aplicatiei. Trebuie sa fie <b>app.compiled.js</b> langa index.html, in radacina repo-ului."); return; }
+        var s = document.createElement("script");
+        s.src = names[i] + "?v=" + Date.now();
+        s.onload = function () {
+          try {
+            ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+          } catch (e) { fail("Fisierul s-a incarcat (" + names[i] + ") dar aplicatia a crapat la pornire:<br>" + e.message); }
+        };
+        s.onerror = function () { i++; tryLoad(); };
+        document.body.appendChild(s);
+      }
+      window.addEventListener("error", function (e) {
+        if (e.message && document.getElementById("loading")) fail(e.message + "<br><small>" + (e.filename || "") + ":" + (e.lineno || "") + "</small>");
+      });
+      tryLoad();
+    })();
   </script>
 </body>
 </html>
